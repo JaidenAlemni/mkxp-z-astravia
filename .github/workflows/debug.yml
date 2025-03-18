@@ -50,7 +50,7 @@ jobs:
         shell: msys2 {0}
         run: |
           source windows/vars.sh
-          meson build -Dhide_console=false
+          meson build -Dhide_console=false -Ddebug=true
           cd build
           ninja
 
