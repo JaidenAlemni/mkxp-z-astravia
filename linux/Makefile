@@ -21,6 +21,7 @@ CLONE := $(GIT) clone -q
 GITHUB := https://github.com
 
 CONFIGURE_ENV := \
+	CMAKE_POLICY_VERSION_MINIMUM=3.10 \
 	PKG_CONFIG_LIBDIR=$(PKG_CONFIG_LIBDIR) \
 	CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
 
@@ -68,21 +69,17 @@ $(DOWNLOADS)/theora/autogen.sh:
 # Vorbis
 libvorbis: init_dirs libogg $(LIBDIR)/libvorbis.a
 
-$(LIBDIR)/libvorbis.a: $(LIBDIR)/libogg.a $(DOWNLOADS)/vorbis/Makefile
-	cd $(DOWNLOADS)/vorbis; \
+$(LIBDIR)/libvorbis.a: $(LIBDIR)/libogg.a $(DOWNLOADS)/vorbis/cmakebuild/Makefile
+	cd $(DOWNLOADS)/vorbis/cmakebuild; \
 	make -j$(NPROC); make install
 
-$(DOWNLOADS)/vorbis/Makefile: $(DOWNLOADS)/vorbis/configure
+$(DOWNLOADS)/vorbis/cmakebuild/Makefile: $(DOWNLOADS)/vorbis/CMakeLists.txt
 	cd $(DOWNLOADS)/vorbis; \
-	$(CONFIGURE) --with-ogg=$(BUILD_PREFIX) --enable-shared=false --enable-static=true
+	mkdir cmakebuild; cd cmakebuild; \
+	$(CMAKE) -DBUILD_SHARED_LIBS=no
 
-$(DOWNLOADS)/vorbis/configure: $(DOWNLOADS)/vorbis/autogen.sh
-	cd $(DOWNLOADS)/vorbis; \
-	./autogen.sh
-
-$(DOWNLOADS)/vorbis/autogen.sh:
+$(DOWNLOADS)/vorbis/CMakeLists.txt:
 	$(CLONE) $(GITHUB)/JaidenAlemni/vorbis -b mkxp-z $(DOWNLOADS)/vorbis
-
 
 # Ogg, dependency of Vorbis
 libogg: init_dirs $(LIBDIR)/libogg.a

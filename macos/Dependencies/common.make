@@ -5,7 +5,8 @@ LIBDIR := $(BUILD_PREFIX)/lib
 INCLUDEDIR := $(BUILD_PREFIX)/include
 DOWNLOADS := ${PWD}/downloads/$(HOST)
 NPROC := $(shell sysctl -n hw.ncpu)
-CFLAGS := -I$(INCLUDEDIR) $(TARGETFLAGS) $(DEFINES) -O3
+# Explicitly including freetype2 dir for now. macOS is having weird issues with ft2build.h
+CFLAGS := -I$(INCLUDEDIR) -I$(INCLUDEDIR)/freetype2 $(TARGETFLAGS) $(DEFINES) -O3
 LDFLAGS := -L$(LIBDIR)
 CC      := clang -arch $(ARCH)
 PKG_CONFIG_LIBDIR := $(BUILD_PREFIX)/lib/pkgconfig
@@ -23,6 +24,7 @@ endif
 
 CONFIGURE_ENV := \
 	$(DEPLOYMENT_TARGET_ENV) \
+	CMAKE_POLICY_VERSION_MINIMUM=3.10 \
 	PKG_CONFIG_LIBDIR=$(PKG_CONFIG_LIBDIR) \
 	CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
 
@@ -79,21 +81,17 @@ $(DOWNLOADS)/theora/autogen.sh:
 # Vorbis
 libvorbis: init_dirs libogg $(LIBDIR)/libvorbis.a
 
-$(LIBDIR)/libvorbis.a: $(LIBDIR)/libogg.a $(DOWNLOADS)/vorbis/Makefile
-	cd $(DOWNLOADS)/vorbis; \
+$(LIBDIR)/libvorbis.a: $(LIBDIR)/libogg.a $(DOWNLOADS)/vorbis/cmakebuild/Makefile
+	cd $(DOWNLOADS)/vorbis/cmakebuild; \
 	make -j$(NPROC); make install
 
-$(DOWNLOADS)/vorbis/Makefile: $(DOWNLOADS)/vorbis/configure
+$(DOWNLOADS)/vorbis/cmakebuild/Makefile: $(DOWNLOADS)/vorbis/CMakeLists.txt
 	cd $(DOWNLOADS)/vorbis; \
-	$(CONFIGURE) --with-ogg=$(BUILD_PREFIX) --enable-shared=false --enable-static=true
+	mkdir cmakebuild; cd cmakebuild; \
+	$(CMAKE) -DBUILD_SHARED_LIBS=no
 
-$(DOWNLOADS)/vorbis/configure: $(DOWNLOADS)/vorbis/autogen.sh
-	cd $(DOWNLOADS)/vorbis; \
-	./autogen.sh
-
-$(DOWNLOADS)/vorbis/autogen.sh:
+$(DOWNLOADS)/vorbis/CMakeLists.txt:
 	$(CLONE) $(GITHUB)/JaidenAlemni/vorbis -b mkxp-z $(DOWNLOADS)/vorbis
-
 
 # Ogg, dependency of Vorbis
 libogg: init_dirs $(LIBDIR)/libogg.a
@@ -316,6 +314,7 @@ $(DOWNLOADS)/ruby/configure: $(DOWNLOADS)/ruby/configure.ac
 
 $(DOWNLOADS)/ruby/configure.ac:
 	$(CLONE) $(GITHUB)/JaidenAlemni/ruby $(DOWNLOADS)/ruby --single-branch -b mkxp-z-3.1.6 --depth 1;
+	sed -i '' '/: $${PRELOADENV=DYLD_INSERT_LIBRARIES}/g' $(DOWNLOADS)/ruby/configure.ac
 
 # ====
 init_dirs:
