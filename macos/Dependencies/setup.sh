@@ -44,7 +44,7 @@ exitcode = run_build(ARCH) ? 0 : 1
 exit(exitcode) if (exitcode != 0)
 
 STEAM_LIB = "Frameworks/steam/sdk/redistributable_bin/osx/libsteam_api.dylib"
-if File.exists?(STEAM_LIB)
+if File.exist?(STEAM_LIB)
     exitcode = fix_steam(STEAM_LIB)
 end
 
