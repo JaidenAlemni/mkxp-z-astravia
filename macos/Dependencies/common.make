@@ -172,7 +172,7 @@ $(DOWNLOADS)/libpng/Makefile: $(DOWNLOADS)/libpng/configure
 	--enable-shared=no --enable-static=yes
 
 $(DOWNLOADS)/libpng/configure:
-	$(CLONE) $(GITHUB)/JaidenAlemni/libpng $(DOWNLOADS)/libpng --single-branch --branch v1.6.38 --depth 1
+	$(CLONE) $(GITHUB)/pnggroup/libpng $(DOWNLOADS)/libpng -b v1.6.50
 
 # SDL2
 sdl2: init_dirs $(LIBDIR)/libSDL2.a
